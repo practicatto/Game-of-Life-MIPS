@@ -32,7 +32,7 @@
 	
 	#mensajes
 	instrucciones_msg:	.asciiz		"Hola!\nActiva el bitmap display antes de empezar.\nTools > Bitmap display. Después conectalo con mips!\nPresiona enter para continuar"
-	inicio_msg:		.asciiz		"Bienvenido!\n Selecciona una de las siguientes configuraciones de patrones:\n1. Bloque (siempre vivo)\n2. Pulsar (oscilador)\n3. Arma\n4. Nave\nPatron methuselah (patron que tardan en estabilizarse):\n5. Arcon\n6. Joseph\n7. Joangie \n8. Salir\n"
+	inicio_msg:		.asciiz		"Bienvenido!\n Selecciona una de las siguientes configuraciones de patrones:\n1. Bloque (siempre vivo)\n2. Pulsar (oscilador)\n3. Arma\n4. Nave\nPatron methuselah (patron que tardan en estabilizarse):\n5. Arcon\nPatrones creados\n6. Joseph\n7. Joangie (tetromino que muere) \n8. Salir\n"
 	error_msg:		.asciiz		"Ha ingresado una opcion invalida. Ingresa un numero [1-8] \n"
 	new_line: 		.asciiz 	"\n"
 	informacion_msg:	.asciiz		"\n   Informacion    \n----------------\n"
@@ -556,6 +556,31 @@ arcon_pattern:
 	
 joseph_pattern:
 joangie_pattern:
+	lw $s1, display			
+	li $a0, 20			
+	li $a1, 20			
+	jal crear_pixel	
+	
+	lw $s1, display			
+	li $a0, 21			
+	li $a1, 21			
+	jal crear_pixel	
+	
+	
+	lw $s1, display			
+	li $a0, 22			
+	li $a1, 21			
+	jal crear_pixel	
+	
+	lw $s1, display			
+	li $a0, 23			
+	li $a1, 21			
+	jal crear_pixel	
+	
+	lw $ra, ($sp)
+	addiu $sp, $sp, 4 #pop $ra
+	j comenzar 
+	
 
 # 	+--------------------+
 # 	|       Inicio       |
