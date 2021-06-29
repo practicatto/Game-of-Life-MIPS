@@ -22,10 +22,9 @@
 #
 # 
 .data
-	new_line: 		.asciiz 	"\n"
-	display:		.word		0x10008000 #para poder usar el bitmap tools y visualizar ($gp) ya que es preferible a un arreglo en el static data porque es menos propenso a bugs
-	vivos:			.space		1200 #array
-	muertos:		.space		1200 #array
+	display:		.word		0x10008000 #para poder usar el bitmap tools y visualizar se usa el siguiente registro $gp ya que es preferible a un arreglo en el static data porque es menos propenso a bugs
+	vivos:			.space		1200 #array de vivos
+	muertos:		.space		1200 #array de muertos
 	
 	pixel_vivo:		.word 		0xFFFFFF	#blanco
 	pixel_muerto:		.word		0x000000	# 0 (negro)
@@ -35,7 +34,12 @@
 	instrucciones_msg:	.asciiz		"Hola!\nActiva el bitmap display antes de empezar.\nTools > Bitmap display. Después conectalo con mips!\nPresiona enter para continuar"
 	inicio_msg:		.asciiz		"Bienvenido!\n Selecciona una de las siguientes configuraciones de patrones:\n1. Bloque (siempre vivo)\n2. Pulsar (oscilador)\n3. Arma\n4. Nave\nPatron methuselah (patron que tardan en estabilizarse):\n5. Arcon\n6. Joseph\n7. Joangie \n8. Salir\n"
 	error_msg:		.asciiz		"Ha ingresado una opcion invalida. Ingresa un numero [1-8] \n"
+	new_line: 		.asciiz 	"\n"
+	informacion_msg:	.asciiz		"\n   Informacion    \n----------------\n"
+	gen_msg:		.asciiz		"Generacion: "
+	celulas_vivas:		.asciiz		"Celulas vivas: "
 	
+		
 .text 
 main:	
 	# instrucciones para empezar | v0: entrada user, a1: tipo de mensaje (0 para error) , a0: mensaje
@@ -76,8 +80,8 @@ main:
 		
 
 	lw $s1, display #se carga direccion inicial de la pantalla donde se va a ver la simulacion 
-	li $a0, 0 #se guarda la posicion en x (Cuanto se mueve a la derecha) Rango: [0-63] porque 512/8 = 64 (8x8 unit pixels) 
-	li $a1, 0 #se guarda la posicion en y (cuanto se mueve hacia abajo) Rango: [0-63] 
+	li $a0, 0 #se guarda la posicion en x (cuanto se mueve a la derecha) Rango: [0-63] porque 512/8 = 64 (8x8 unit pixels). Inicialmente: 0
+	li $a1, 0 #se guarda la posicion en y (cuanto se mueve hacia abajo) Rango: [0-63]. Inicialmente: 0
 	
 
 # 			+----------+
@@ -108,19 +112,15 @@ bloque_pattern:
 	addiu $sp, $sp, 4 #pop $ra
 	j comenzar 
 
+
 pulsar_pattern:
 	addi $sp, $sp, -4		
-	sw $ra, ($sp)	#push $ra
+	sw $ra, ($sp)				# push $ra to the stack	
 	
 	lw $s1, display			
-	li $a0, 31			
-	li $a1, 32			
-	jal crear_pixel	
-	
 	li $a0, 26			
 	li $a1, 30			
 	jal crear_pixel	
-	
 	lw $s1, display			
 	li $a0, 26			
 	li $a1, 29			
@@ -315,7 +315,7 @@ pulsar_pattern:
 	jal crear_pixel
 	
 	lw $ra, ($sp)
-	addiu $sp, $sp, 4 # pop $ra	
+	addiu $sp, $sp, 4			# pop $ra from the stack	
 	j comenzar 
 
 arma_pattern:
@@ -563,24 +563,28 @@ joangie_pattern:
 # 	+--------------------+
 
 comenzar:
+	li $t0, 0 # inicilizacion de generacion
 	li $t7, 1 #inicializacion de pixeles vivos a 1 para que pueda empezar con el patron escogido por el usuario
+	
 	loop_display:
 		beq $t7, $zero, end #si no hay pixeles vivos (0 pixeles vivos) entonces salir.
 		jal actualizar #un loop en todo el display para ver si hay pixeles vivos
+		jal print_data
 		j loop_display
 #se coloca end aqui para que no tenga que dar muchos saltos
 end:
 	la $v0, 10
 	syscall
+
 	
 crear_pixel:	
 	lw  $s1, display #inicio del display
 	sll $t1, $a0, 2 #calculo de la posicion en x | multiplicando x por 4 (1 word)
-	sll $t2, $a1, 8 #calculo de la posicion en y | multiplicando y por 8 (256 es el numero de toda la fila de la pantalla: 16384/64 = 256) 
+	sll $t2, $a1, 8 #calculo de la posicion en y | multiplicando y por 2**8 (256 es el numero de toda la fila de la pantalla: 16384/64 = 256) 
 	add $t1, $t1, $t2 #suma xy 
 	add $s1, $s1, $t1 #posicion nueva del pixel 
-	lw $t0, pixel_vivo #colocando pixel blanco
-	sw $t0, ($s1) #aqui colocando en el bitmap el pixel vivo :d
+	lw $t4, pixel_vivo #colocando pixel blanco
+	sw $t4, ($s1) #aqui colocando en el bitmap el pixel vivo :d
 	jr $ra #chau
 
  verifica_color:
@@ -614,8 +618,8 @@ obtener_direccion:
 	jr $ra 
 
 actualizar:
-	#Recorremos cada pixel de la pantalla y determinamos si habra vida nuevo 
-	#Si no hay alguna celda viva se termina el programa
+	#Recorremos cada pixel de la pantalla y determinamos si habra vida nueva
+	#Si no hay alguna celula viva se termina el programa
  	addi $sp, $sp, -4 
  	sw $ra ($sp) #push $ra
  	
@@ -644,6 +648,7 @@ actualizar:
  			
  			addiu $t9, $t9, 4 #siguiente indice
  			addi $t7, $t7, -1 #restamos 1 en el contador
+ 			
  			j verificar_bordes
  		
  		muerto:
@@ -657,9 +662,10 @@ actualizar:
  				addiu $t7, $t7, 1 #incrementar contador
  				
  		verificar_bordes: 
- 		addiu $a0, $a0, 1 
- 		bgt $a0, 63, reiniciar_x #el rango de las coordenadas es de [0,63] reiniciar coordenada x e incrementar la coordenada y
- 		blt $a0, 64, verifica_pixel #x y y están dentro del rango entonces se puede seguir recorriendo la pantalla
+ 			addiu $a0, $a0, 1 
+ 			bgt $a0, 63, reiniciar_x #el rango de las coordenadas es de [0,63] reiniciar coordenada x e incrementar la coordenada y
+ 			blt $a0, 64, verifica_pixel #x y y están dentro del rango entonces se puede seguir recorriendo la pantalla
+ 			
  			reiniciar_x:
  				li $a0,0
  				addiu $a1, $a1, 1
@@ -672,19 +678,21 @@ actualizar:
  					addiu $sp, $sp, 4
  					jr $ra
  				
- 				siguiente_gen:
- 					addi $sp, $sp, -4
- 					sw $s2, ($sp)
- 					la $t8, vivos
- 					la $t9, muertos
- 					matar:
- 						lw $s2, ($t9)
- 						beq $s2, $zero, generar 
- 						lw $v1, ($t9)
- 						lw $t4, pixel_muerto #cargo color negro
- 						sw $t4, ($t9) 
- 						addiu $t9, $t9, 4
- 						j matar
+ 		siguiente_gen:
+ 			addi $sp, $sp, -4
+ 			sw $s2, ($sp)
+ 			la $t8, vivos
+ 			la $t9, muertos
+ 			addiu $t0, $t0, 1
+ 				matar:
+ 					lw $s2, ($t9)
+					beqz $s2, generar			
+					lw $v1, ($t9) 
+					lw $t4, pixel_muerto # color de pixl muerto
+					sw $t4, ($v1) # pixel muerto
+					sw $zero, ($t9)
+					addiu $t9, $t9, 4
+					j matar
  					
  					generar:
  						lw $s2, ($t8)
@@ -697,14 +705,48 @@ actualizar:
  						j generar 
  					
  					terminar_sgtgen:
+
  						lw $s2, ($sp)
  						addiu $sp, $sp, 4
  						jr $ra
+ print_data:
+	
+ 	li $v0, 4
+ 	la $a0, informacion_msg
+ 	syscall
+ 	
+ 	li $v0, 4
+	la $a0, gen_msg
+	syscall
+	
+ 	li $v0, 1
+	addu $a0, $t0, $zero
+	syscall
+
+	li $v0, 4
+	la $a0, new_line
+	syscall
+	
+	li $v0, 4
+	la $a0, celulas_vivas
+	syscall
+	
+	
+	li $v0, 1
+	addu $a0, $t7, $zero
+	syscall
+	
+	li $v0, 4
+	la $a0, new_line
+	syscall
+	
+	jr $ra
+ 						
  	
 # .-----------------.----------------.----------------.
 # | 1: (x-1, y-1)   |  2: (x, y-1)   |  3: (x+1,y-1)  |
 # :-----------------+----------------+----------------:
-# | 4: (x-1, y)     |  celda: (x,y)  |  5: (x+1, y)   |
+# | 4: (x-1, y)     |  celula: (x,y)  |  5: (x+1, y)   |
 # :-----------------+----------------+----------------:
 # | 6: (x-1, y+1)   |  7: (x, y+1)   |  8: (x+1, y+1) |
 # '-----------------'----------------'----------------'				
@@ -722,7 +764,7 @@ contar_vecinos:
 		blt $a3, 0 verificar_arriba
 		
 		jal verifica_color
-		sne $t6, $v0, 0xFFFFFF
+		sne $t6, $v0, 0
 		add $t5, $t5, $t6 
 	
 	#(x, y-1) verificar vecinos arriba
@@ -778,9 +820,9 @@ contar_vecinos:
 		addiu $a3, $a1, 1 #y+1
 		bgt $a3, 63, verificar_inferiorder
 		jal verifica_color
-		sne $t6, $v0, 0
+		sne $t6, $v0, 0 #no es 0, incrementar el contador de vecinos vivos
 		add $t5, $t5, $t6
-	
+	#x+1, y+1
 	verificar_inferiorder:
 		addi $a2, $a0, 1 #x+1
 		bgt $a2, 63, terminar_verificacion
@@ -804,6 +846,7 @@ mostrar_instrucciones:
 	syscall
 	
 	move $t0, $v0
+	
 	li $v0, 4
 	la $a0, new_line
 	syscall
