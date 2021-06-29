@@ -555,6 +555,91 @@ arcon_pattern:
 	j comenzar 
 	
 joseph_pattern:
+	lw $s1 display
+	li $a1 , 32
+	li $a1 , 40
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 32
+	li $a1 , 39
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 32
+	li $a1 , 38
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 32
+	li $a1 , 37
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 32
+	li $a1 , 36
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 31
+	li $a1 , 35
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 33
+	li $a1 , 35
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 28
+	li $a1 , 34
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 29
+	li $a1 , 34
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 30
+	li $a1 , 34
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 31
+	li $a1 , 34
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 33
+	li $a1 , 34
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 34
+	li $a1 , 34
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 35
+	li $a1 , 34
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 35
+	li $a1 , 34
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 31
+	li $a1 , 33
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 33
+	li $a1 , 33
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 32
+	li $a1 , 32
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 32
+	li $a1 , 31
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 32
+	li $a1 , 30
+	jal crear_pixel
+	lw $s1 display
+	li $a0 , 32
+	li $a1 , 29
+	jal crear_pixel
+	
 joangie_pattern:
 	lw $s1, display			
 	li $a0, 20			
