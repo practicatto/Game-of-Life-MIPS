@@ -2,11 +2,11 @@
 #					▒█▀▀█ █▀▀█ █▀▄▀█ █▀▀ 　 █▀▀█ █▀▀ 　 █░░ ░▀░ █▀▀ █▀▀ 
 #					▒█░▄▄ █▄▄█ █░▀░█ █▀▀ 　 █░░█ █▀▀ 　 █░░ ▀█▀ █▀▀ █▀▀ 
 #					▒█▄▄█ ▀░░▀ ▀░░░▀ ▀▀▀ 　 ▀▀▀▀ ▀░░ 　 ▀▀▀ ▀▀▀ ▀░░ ▀▀▀
-# 						Computer Organization's project
+# 					   Proyecto 1P de Organización de computadores
 #
 #	 			+-----------------+
-#	 			|     Authors     |			+----------+---------+ 
-#	 			+-----------------+			| Language | Spanish |
+#	 			|     Autores     |			+----------+---------+ 
+#	 			+-----------------+			|  Idioma  | Español |
 #	 			| Joseph Avila    |			+----------+---------+ 
 #		 		| Joangie Marquez |		
 #		 		+-----------------+		
@@ -19,7 +19,34 @@
 #			  | que rodea las celdas sobre las cuales se producirán las interacciones.   |
 # 			  +--------------------------------------------------------------------------+
 #
-#
+# USO DE REGISTROS
+# .--------------.--------------------------------------------------------------.
+# | Registro     |                              Uso                             |
+# :--------------+--------------------------------------------------------------:
+# | a0           |  Coordenada x del pixel                                      |
+# :--------------+--------------------------------------------------------------:
+# | a1           |  Coordenada y del pixel                                      |
+# :--------------+--------------------------------------------------------------:
+# | a2           | Coordenada x del pixel vecino                                |
+# :--------------+--------------------------------------------------------------:
+# | a3           | Coordenada y del pixel vecino                                |
+# :--------------+--------------------------------------------------------------:
+# | t0           | Contador de generaciones                                     |
+# :--------------+--------------------------------------------------------------:
+# | t1           | Posición en x calculada para display (dirección)             |
+# :--------------+--------------------------------------------------------------:
+# | t2           | Posición en y calculada para display (dirección)             |
+# :--------------+--------------------------------------------------------------:
+# | t5           | Contador de células vecinas vivost7Contador de células vivas |
+# :--------------+--------------------------------------------------------------:
+# | t8           | Arreglo de células vivast9Arreglo de células muertas         |
+# :--------------+--------------------------------------------------------------:
+# | s0           | Opción del usuario                                           |
+# :--------------+--------------------------------------------------------------:
+# | s1           | Dirección inicial de la pantalla ($gp)                       |
+# :--------------+--------------------------------------------------------------:
+# | s2           | Puntero para los arreglos de vivos y muerto                  |
+# '--------------'--------------------------------------------------------------'
 # 
 .data
 	display:		.word		0x10008000 #para poder usar el bitmap tools y visualizar se usa el siguiente registro $gp ya que es preferible a un arreglo en el static data porque es menos propenso a bugs
@@ -32,7 +59,7 @@
 	
 	#mensajes
 	instrucciones_msg:	.asciiz		"Hola!\nActiva el bitmap display antes de empezar.\nTools > Bitmap display. Después conectalo con mips!\nPresiona enter para continuar"
-	inicio_msg:		.asciiz		"Bienvenido!\n Selecciona una de las siguientes configuraciones de patrones:\n1. Bloque (siempre vivo)\n2. Pulsar (oscilador)\n3. Arma\n4. Nave\nPatron methuselah (patron que tardan en estabilizarse):\n5. Arcon\nPatrones creados\n6. Joseph\n7. Joangie (tetromino que muere) \n8. Salir\n"
+	inicio_msg:		.asciiz		"Bienvenido!\n Selecciona una de las siguientes configuraciones de patrones:\n1. Bloque (siempre vivo)\n2. Pulsar (oscilador)\n3. Arma\n4. Nave\nPatron methuselah (patron que tardan en estabilizarse):\n5. Arcon\nOtros patrones\n6. Joseph\n7. Joangie (tetromino que muere) \n8. Salir\n"
 	error_msg:		.asciiz		"Ha ingresado una opcion invalida. Ingresa un numero [1-8] \n"
 	new_line: 		.asciiz 	"\n"
 	informacion_msg:	.asciiz		"\n   Informacion    \n----------------\n"
@@ -90,7 +117,7 @@ main:
 
 bloque_pattern:
 	addi $sp, $sp, -4		
-	sw $ra, ($sp) # push $ra
+	sw $ra, ($sp) 
 	
 	lw $s1, display			
 	li $a0, 32			
@@ -109,13 +136,13 @@ bloque_pattern:
 	
 	
 	lw $ra, ($sp)
-	addiu $sp, $sp, 4 #pop $ra
+	addiu $sp, $sp, 4 
 	j comenzar 
 
 
 pulsar_pattern:
 	addi $sp, $sp, -4		
-	sw $ra, ($sp)				# push $ra to the stack	
+	sw $ra, ($sp)				
 	
 	lw $s1, display			
 	li $a0, 26			
@@ -315,7 +342,7 @@ pulsar_pattern:
 	jal crear_pixel
 	
 	lw $ra, ($sp)
-	addiu $sp, $sp, 4			# pop $ra from the stack	
+	addiu $sp, $sp, 4				
 	j comenzar 
 
 arma_pattern:
@@ -513,14 +540,14 @@ nave_pattern:
 	jal crear_pixel		
 	
 	lw $ra, ($sp)
-	addiu $sp, $sp, 4			# pop $ra from the stack
+	addiu $sp, $sp, 4	
 	j comenzar 
 
 arcon_pattern:
 	acorn:
-	subiu $sp, $sp, 4		
-	sw $ra, ($sp)				# push $ra to the stack
-	
+	addi $sp, $sp, -4		
+	sw $ra, ($sp)					
+		
 	lw $s1, display			
 	li $a0, 39		
 	li $a1, 33		
@@ -555,6 +582,9 @@ arcon_pattern:
 	j comenzar 
 	
 joseph_pattern:
+	addi $sp, $sp, -4		
+	sw $ra, ($sp)	
+
 	lw $s1 display
 	li $a1 , 32
 	li $a1 , 40
@@ -640,7 +670,14 @@ joseph_pattern:
 	li $a1 , 29
 	jal crear_pixel
 	
+	lw $ra, ($sp)
+	addiu $sp, $sp, 4	
+	j comenzar 
+	
 joangie_pattern:
+	addi $sp, $sp, -4 #push ra	
+	sw $ra, ($sp)	
+	
 	lw $s1, display			
 	li $a0, 20			
 	li $a1, 20			
@@ -693,12 +730,13 @@ crear_pixel:
 	sll $t2, $a1, 8 #calculo de la posicion en y | multiplicando y por 2**8 (256 es el numero de toda la fila de la pantalla: 16384/64 = 256) 
 	add $t1, $t1, $t2 #suma xy 
 	add $s1, $s1, $t1 #posicion nueva del pixel 
+	
 	lw $t4, pixel_vivo #colocando pixel blanco
 	sw $t4, ($s1) #aqui colocando en el bitmap el pixel vivo :d
 	jr $ra #chau
 
  verifica_color:
- 	#determinara el color del vecino (neighbor) nos encanta el spanglish
+ 	#determinara el color del vecino
  	lw $s1, display 
  	sll $t1, $a2, 2 #calculo del vecino x
  	sll $t2, $a3, 8 #calculo del vecino y
@@ -852,7 +890,8 @@ actualizar:
 	
 	jr $ra
  						
- 	
+
+
 # .-----------------.----------------.----------------.
 # | 1: (x-1, y-1)   |  2: (x, y-1)   |  3: (x+1,y-1)  |
 # :-----------------+----------------+----------------:
@@ -965,17 +1004,4 @@ mostrar_instrucciones:
 	#10 es ascii para enter	
 	bne $t0, 10, mostrar_instrucciones 
 	jr $ra
-	 
-	
-
-
-	
-
-
-
-
-
-
-
-
-
+ 
